@@ -28,6 +28,16 @@ class Area(ABC):
 	@abstractmethod
 	def vertices(self):
 		raise NotImplementedError()
+
+	@classmethod
+	@abstractmethod
+	def __subclasshook__(cls, C):
+		if cls is Area:
+			attrs = set(dir(C))
+			if set(cls.__abstractmethods__) <= attrs:
+				return True
+
+		return NotImplemented
 	
 
 class Path(ABC):
@@ -40,6 +50,16 @@ class Path(ABC):
 	@abstractmethod
 	def length(self):
 		raise NotImplementedError()
+
+	@classmethod
+	@abstractmethod
+	def __subclasshook__(cls, C):
+		if cls is Path:
+			attrs = set(dir(C))
+			if set(cls.__abstractmethods__) <= attrs:
+				return True
+
+		return NotImplemented
 	
 
 class Field(ABC):
