@@ -4,7 +4,7 @@ A python library defining primitives commonly used in robotic applications (e.g.
 
 ## Code Example
 
-A minimal usage example to create a field and plot it.
+A minimal usage example with a domain definition.
 
 ```python
 import robot_primitives as rp
