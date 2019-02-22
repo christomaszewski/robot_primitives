@@ -30,7 +30,6 @@ class Area(ABC):
 		raise NotImplementedError()
 
 	@classmethod
-	@abstractmethod
 	def __subclasshook__(cls, C):
 		if cls is Area:
 			attrs = set(dir(C))
@@ -52,7 +51,6 @@ class Path(ABC):
 		raise NotImplementedError()
 
 	@classmethod
-	@abstractmethod
 	def __subclasshook__(cls, C):
 		if cls is Path:
 			attrs = set(dir(C))
