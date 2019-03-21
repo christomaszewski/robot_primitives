@@ -76,6 +76,11 @@ class Field(ABC):
 		raise NotImplementedError()
 
 
+	@property
+	def boundary(self):
+		return None
+	
+
 class Heuristic(ABC):
 
 	@abstractmethod
