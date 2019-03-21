@@ -29,5 +29,7 @@ class VectorField(Field):
 
 		compound_flow = lambda x,y: channel_flow(x,y) if x < pylon_bounds[0] or x > pylon_bounds[1] else pylon_flow(x,y)
 
+		return cls(compound_flow)
+
 	def __getitem__(self, index):
 		return self._field_func(*index)
