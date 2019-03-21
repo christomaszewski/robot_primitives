@@ -25,7 +25,7 @@ class VectorField(Field):
 
 		pylon_boundary_flow = [channel_flow(x) for x in pylon_bounds]
 
-		pylon_flow = lambda x: pylon_boundary_flow[0] - 2*x*pylon_boundary_flow[0]/pylon_width if x < pylon_bounds[0] + pylon_width/2 else 2*x*pylon_boundary_flow[1]/pylon_width
+		pylon_flow = lambda x: pylon_boundary_flow[0] - 2*(x-pylon_bounds[0])*pylon_boundary_flow[0]/pylon_width if x < pylon_bounds[0] + pylon_width/2 else 2*(x-pylon_bounds[0]-pylon_width/2)*pylon_boundary_flow[1]/pylon_width
 
 		compound_flow = lambda x,y: (0, channel_flow(x)) if x < pylon_bounds[0] or x > pylon_bounds[1] else (0, pylon_flow(x))
 
