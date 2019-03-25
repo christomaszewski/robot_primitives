@@ -4,7 +4,8 @@ from .base import Heuristic
 
 class EuclideanDistance(Heuristic):
 
-	def compute_cost(self, start_point, end_point):
+	@staticmethod
+	def compute_cost(start_point, end_point):
 		return np.linalg.norm(np.asarray(end_point)-np.asarray(start_point))
 
 
