@@ -1,8 +1,26 @@
 import numpy as np
+import json
+import os
 
 from .base import Path
 
+
+class PathJSONEncoder(json.JSONEncoder):
+
+	def default(self, data):
+		dict_rep = {'coord_list':data.coord_list, **data.constraints}
+		return dict_rep
+
+	@classmethod
+	def decode(cls, json_dict):
+		coord_list = json_dict.pop('coord_list')
+
+		path = ConstrainedPath(coord_list, **json_dict)
+		return path
+
 class ConstrainedPath(Path):
+
+	json_encoder = PathJSONEncoder
 
 	def __init__(self, coord_list, **constraints):
 		self._coord_list = coord_list
@@ -43,6 +61,27 @@ class ConstrainedPath(Path):
 		self._length += other.length
 
 		return self
+
+	@classmethod
+	def from_file(cls, filename):
+		extension = os.path.splitext(filename)[1][1:]
+		with open(filename, mode='r') as f:
+			if extension == 'json':
+				path = json.load(f, object_hook=PathJSONEncoder.decode)
+			else:
+				print(f"Error: Unrecognized extension {extension}, supported extension is json")
+				path = None
+
+		return path
+
+	def save(self, filename):
+		extension = os.path.splitext(filename)[1][1:]
+		with open(filename, 'w') as f:
+			if extension == 'json':
+				json.dump(self, f, cls=ConstrainedPath.json_encoder, indent=2)
+			else:
+				print(f"Error: Unrecognized extension {extension}, supported extension is json")
+
 
 	def _property_factory(self, parameter):
 		return property(lambda obj:obj._constraints[parameter], 
