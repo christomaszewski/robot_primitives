@@ -118,3 +118,7 @@ class ConstrainedPath(Path):
 	def constrained_parameters(self):
 		return self._constraints.keys()
 	
+	@property
+	def constraints(self):
+		return self._constraints
+	
