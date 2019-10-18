@@ -37,6 +37,12 @@ class Domain(Area):
 
 		return cls(bounding_box, ingress_point, egress_point)
 
+	@classmethod
+	def from_coord_list(cls, coord_list, ingress_point=None, egress_point=None):
+		bounding_polygon = shapely.geometry.Polygon(coord_list)
+
+		return cls(bounding_polygon, ingress_point, egress_point)
+
 	def add_obstacle(self, obstacle):
 		self._obstacles[obstacle.id] = obstacle
 		self._vertices.extend(obstacle.vertices)
