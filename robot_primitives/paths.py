@@ -88,6 +88,9 @@ class ConstrainedPath(Path):
 							lambda obj, val: obj._constraints.update({parameter:value}), 
 							lambda obj:obj._constraints.pop(parameter))
 
+	def transform(self, transform_func):
+		self._coord_list = [transform_func(pt) for pt in self._coord_list]
+
 	def is_constrained(self, parameter):
 		return parameter in self._constraints
 
