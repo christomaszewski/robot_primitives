@@ -16,7 +16,7 @@ class Domain(Area):
 		self._id = 0
 		self._type = AreaType.FREE
 		self._polygon = bounding_polygon
-		self._vertices = list(self._polygon.exterior.coords)
+		self._vertices = list(self._polygon.exterior.coords)[:-1] # Dropping the last repeated point, needs testing, may break stuff
 
 		self._obstacles = {}
 
@@ -125,7 +125,7 @@ class Obstacle(Area):
 		Obstacle.id_num += 1
 		self._type = AreaType.OBSTACLE
 		self._polygon = polygon
-		self._vertices = list(polygon.exterior.coords)
+		self._vertices = list(polygon.exterior.coords)[:-1] # Dropping last repeated point, needs testing
 
 	@classmethod
 	def from_vertex_list(cls, vertices):
