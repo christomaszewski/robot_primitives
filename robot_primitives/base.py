@@ -1,5 +1,3 @@
-import numpy as np
-
 from abc import ABC, abstractmethod
 from enum import Enum
 
@@ -25,27 +23,6 @@ class Area(ABC):
 	def polygon(self):
 		""" All areas must have defining polygon """
 		return self._polygon
-
-	@property
-	def interior_angles(self):
-		""" Return interior angles of polygon that defines the area """
-		coord_list = list(self.polygon.exterior.coords)[:-1]
-
-		interior_angles = {}
-
-		for i, pt in enumerate(coord_list):
-			curr_pt = np.array(pt)
-			prev_pt = np.array(coord_list[i-1])
-			next_pt = np.array(coord_list[(i+1)%len(coord_list)])
-
-			a = prev_pt - curr_pt
-			b = next_pt - curr_pt
-			cos_angle = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-			angle = np.degrees(np.arccos(cos_angle))
-
-			interior_angles[pt] = angle
-
-		return interior_angles
 	
 	@property
 	@abstractmethod

@@ -6,8 +6,54 @@ import operator
 
 from .base import Area, AreaType
 
+class Region(Area):
+	""" A basic type of Area that implements a variety of useful methods 
+		 other Area classes can inherit
+	"""
 
-class Domain(Area):
+	def _init__(self, bounding_polygon, area_type=AreaType.UNDEFINED, identifier=0):
+		self._polygon = bounding_polygon
+		self._type = area_type
+		self._id = identifier
+		self._vertices = list(self._polygon.exterior.coords)[:-1]
+
+	def get_side(self, side_index):
+		if side_index >= self.num_sides:
+			raise IndexError(f"Error: Requested side index {side_index} > number of defined sides {self.num_sides}.")
+		
+		return self._polygon.exterior.coords[side_index:side_index+2] 
+
+	@property
+	def vertices(self):
+		return self._vertices
+
+	@property
+	def num_sides(self):
+		return len(self._vertices)
+
+	@property
+	def interior_angles(self):
+		""" Return interior angles of polygon that defines the area """
+		coord_list = list(self._polygon.exterior.coords)[:-1]
+
+		interior_angles = {}
+
+		for i, pt in enumerate(coord_list):
+			curr_pt = np.array(pt)
+			prev_pt = np.array(coord_list[i-1])
+			next_pt = np.array(coord_list[(i+1)%len(coord_list)])
+
+			a = prev_pt - curr_pt
+			b = next_pt - curr_pt
+			cos_angle = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+			angle = np.degrees(np.arccos(cos_angle))
+
+			interior_angles[pt] = angle
+
+		return interior_angles
+
+
+class Domain(Region):
 	""" Domain represents the entire area over which planning occurs. 
 		 Its id is defined as 0 and its type is free by definition.
 	"""
@@ -38,8 +84,8 @@ class Domain(Area):
 		return cls(bounding_box, ingress_point, egress_point)
 
 	@classmethod
-	def from_coord_list(cls, coord_list, ingress_point=None, egress_point=None):
-		bounding_polygon = shapely.geometry.Polygon(coord_list)
+	def from_vertex_list(cls, vertices, ingress_point=None, egress_point=None):
+		bounding_polygon = shapely.geometry.Polygon(vertices)
 
 		return cls(bounding_polygon, ingress_point, egress_point)
 
@@ -94,10 +140,6 @@ class Domain(Area):
 	@property
 	def polygon(self):
 		return shapely.geometry.Polygon(self._polygon.exterior.coords, holes=[o.polygon.exterior.coords for o in self._obstacles.values()])
-
-	@property
-	def vertices(self):
-		return self._vertices
 	
 	@property
 	def bounds(self):
@@ -116,7 +158,7 @@ class Domain(Area):
 		return self._egress_point
 	
 
-class Obstacle(Area):
+class Obstacle(Region):
 
 	id_num = 1
 
@@ -132,7 +174,3 @@ class Obstacle(Area):
 		polygon = shapely.geometry.Polygon(vertices)
 
 		return cls(polygon)
-
-	@property
-	def vertices(self):
-		return self._vertices
