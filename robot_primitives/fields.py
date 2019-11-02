@@ -1,3 +1,5 @@
+import numpy as np
+
 from .base import Field
 
 class VectorField(Field):
@@ -33,3 +35,50 @@ class VectorField(Field):
 
 	def __getitem__(self, index):
 		return self._field_func(*index)
+
+class BoundedVectorField(VectorField):
+
+	def __init__(self, field_func, bounding_region):
+		self._field_func = field_func
+		self._bounding_region = bounding_region
+
+	@classmethod
+	def channel_flow_model(cls, bounding_region, center_axis, max_velocity, channel_width=None):
+		print(f"center_axis: {center_axis}, {center_axis[1][0]}, {center_axis[0][0]}")
+		center_axis_vector = np.array([center_axis[1][0]-center_axis[0][0], center_axis[1][1] - center_axis[0][1]])
+		center_axis_length = np.linalg.norm(center_axis_vector)
+		center_axis_direction = center_axis_vector/center_axis_length
+		print(f"center_axis_vector: {center_axis_vector}")
+
+		if not channel_width:
+			# Compute channel width from bounding_region
+			perpendicular_vector = np.array([-center_axis_vector[1], center_axis_vector[0]])
+
+			perpendicular_direction = perpendicular_vector/np.linalg.norm(perpendicular_vector)
+			bounding_verts_scalar_proj = [np.dot(np.array(vert), perpendicular_direction) for vert in bounding_region.vertices]
+			channel_width = abs(max(bounding_verts_scalar_proj) - min(bounding_verts_scalar_proj))
+
+			print(f"channel_width: {channel_width}")
+
+		dist = lambda x,y: np.cross(np.array([x-center_axis[0][0], y - center_axis[0][1]]), center_axis_vector)/center_axis_length
+
+		#field_magnitude = lambda x,y: (4 * (dist(x,y)) / channel_width - 4 * (dist(x,y))**2 / channel_width**2) * max_velocity
+		field_magnitude = lambda x,y: (4 * (dist(x,y)+channel_width/2) / channel_width - 4 * (dist(x,y)+channel_width/2)**2 / channel_width**2) * max_velocity
+
+		field_func = lambda x,y: tuple(field_magnitude(x,y)*center_axis_direction)
+
+		pt = (6,4)
+
+		print(f"{pt} dist, field_mag, field_vec: {dist(*pt)}, {field_magnitude(*pt)}, {field_func(*pt)}")
+
+		pt = (5,5)
+
+		print(f"{pt} dist, field_mag, field_vec: {dist(*pt)}, {field_magnitude(*pt)}, {field_func(*pt)}")
+
+		pt = (7.5,2.5)
+
+		print(f"{pt} dist, field_mag, field_vec: {dist(*pt)}, {field_magnitude(*pt)}, {field_func(*pt)}")
+
+		return cls(field_func, bounding_region)
+
+		#dist_from_ideal_line = abs(np.cross(self._target_seg, curr_seg))/self._target_seg_length
