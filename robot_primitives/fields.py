@@ -1,4 +1,5 @@
 import numpy as np
+import shapely.geometry
 
 from .base import Field
 
@@ -44,7 +45,7 @@ class BoundedVectorField(VectorField):
 
 	@classmethod
 	def channel_flow_model(cls, bounding_region, center_axis, max_velocity, channel_width=None):
-		print(f"center_axis: {center_axis}, {center_axis[1][0]}, {center_axis[0][0]}")
+		print(f"center_axis: {center_axis}")
 		center_axis_vector = np.array([center_axis[1][0]-center_axis[0][0], center_axis[1][1] - center_axis[0][1]])
 		center_axis_length = np.linalg.norm(center_axis_vector)
 		center_axis_direction = center_axis_vector/center_axis_length
@@ -67,18 +68,12 @@ class BoundedVectorField(VectorField):
 
 		field_func = lambda x,y: tuple(field_magnitude(x,y)*center_axis_direction)
 
-		pt = (6,4)
-
-		print(f"{pt} dist, field_mag, field_vec: {dist(*pt)}, {field_magnitude(*pt)}, {field_func(*pt)}")
-
-		pt = (5,5)
-
-		print(f"{pt} dist, field_mag, field_vec: {dist(*pt)}, {field_magnitude(*pt)}, {field_func(*pt)}")
-
-		pt = (7.5,2.5)
-
-		print(f"{pt} dist, field_mag, field_vec: {dist(*pt)}, {field_magnitude(*pt)}, {field_func(*pt)}")
-
 		return cls(field_func, bounding_region)
 
-		#dist_from_ideal_line = abs(np.cross(self._target_seg, curr_seg))/self._target_seg_length
+
+	def __getitem__(self, index):
+		if not self._bounding_region.polygon.contains(shapely.geometry.Point(*index)):
+			print('Error: Specified point lies out of valid boundary for this field')
+			return None
+		else:
+			return self._field_func(*index)
