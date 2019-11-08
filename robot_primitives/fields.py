@@ -39,12 +39,13 @@ class VectorField(Field):
 
 class BoundedVectorField(VectorField):
 
-	def __init__(self, field_func, bounding_region):
+	def __init__(self, field_func, bounding_region, undefined_value=(0.,0)):
 		self._field_func = field_func
 		self._bounding_region = bounding_region
+		self._undefined_value = undefined_value
 
 	@classmethod
-	def channel_flow_model(cls, bounding_region, center_axis, max_velocity, channel_width=None):
+	def channel_flow_model(cls, bounding_region, center_axis, max_velocity, channel_width=None, **other_args):
 		print(f"center_axis: {center_axis}")
 		center_axis_vector = np.array([center_axis[1][0]-center_axis[0][0], center_axis[1][1] - center_axis[0][1]])
 		center_axis_length = np.linalg.norm(center_axis_vector)
@@ -68,12 +69,12 @@ class BoundedVectorField(VectorField):
 
 		field_func = lambda x,y: tuple(field_magnitude(x,y)*center_axis_direction)
 
-		return cls(field_func, bounding_region)
+		return cls(field_func, bounding_region, **other_args)
 
 
 	def __getitem__(self, index):
 		if not self._bounding_region.polygon.contains(shapely.geometry.Point(*index)):
 			print('Error: Specified point lies out of valid boundary for this field')
-			return None
+			return self._undefined_value
 		else:
 			return self._field_func(*index)
