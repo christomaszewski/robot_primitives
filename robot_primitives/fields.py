@@ -39,7 +39,7 @@ class VectorField(Field):
 
 class BoundedVectorField(VectorField):
 
-	def __init__(self, field_func, bounding_region, undefined_value=(0.,0)):
+	def __init__(self, field_func, bounding_region, undefined_value=(0.,0.)):
 		self._field_func = field_func
 		self._bounding_region = bounding_region
 		self._undefined_value = undefined_value
