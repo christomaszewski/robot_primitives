@@ -9,6 +9,28 @@ class EuclideanDistance(Heuristic):
 		return np.linalg.norm(np.asarray(end_point)-np.asarray(start_point))
 
 
+class DirectedDistance(Heuristic):
+
+	def __init__(self, direction):
+		numpy_vec = np.array(direction)
+		self._direction_vector = numpy_vec / np.linalg.norm(numpy_vec)
+
+	@classmethod
+	def perpendicular(cls, vector):
+		normal_vec = (-vector[1], vector[0])
+
+		return cls(normal_vec)
+
+	def compute_cost(self, start_point, end_point):
+		start_pt = np.array(start_point)
+		end_pt = np.array(end_point)
+		dist_vec = end_pt - start_pt
+
+		scalar_proj = np.dot(self._direction_vector, dist_vec)
+
+		return abs(scalar_proj)
+
+
 class OpposingFlowEnergy(Heuristic):
 
 	def __init__(self, flow_field, delta=0.01):
