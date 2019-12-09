@@ -71,6 +71,58 @@ class BoundedVectorField(VectorField):
 
 		return cls(field_func, bounding_region, **other_args)
 
+	"""
+	@classmethod
+	def half_channel_flow_model(cls, bounding_region, flow_axis, max_velocity, **other_args):
+		flow_axis_vector = np.array([flow_axis[1][0]-flow_axis[0][0], flow_axis[1][1] - flow_axis[0][1]])
+		flow_axis_length = np.linalg.norm(flow_axis_vector)
+		flow_axis_direction = flow_axis_vector/flow_axis_length
+
+		# Compute perpendicular vector
+		perpendicular_vector = np.array([-center_axis_vector[1], center_axis_vector[0]])
+		perpendicular_direction = perpendicular_vector/np.linalg.norm(perpendicular_vector)
+
+		bounding_verts_scalar_proj = [np.dot(np.array(vert), perpendicular_direction) for vert in bounding_region.vertices]
+		half_channel_width = abs(max(bounding_verts_scalar_proj) - min(bounding_verts_scalar_proj))
+
+	"""
+
+	@classmethod
+	def linear_flow_model(cls, bounding_region, flow_axis, v1, v2, **other_args):
+		"""
+		x_coords = [vert[0] for vert in bounding_region.vertices]
+		y_coords = [vert[1] for vert in bounding_region.vertices]
+		origin = np.array([min(x_coords), min(y_coords)])
+
+		offset_flow_axis = [np.array(flow_axis[0]) - origin, np.array(flow_axis[1]) - origin]
+		"""
+
+
+		flow_axis_vector = np.array([flow_axis[1][0]-flow_axis[0][0], flow_axis[1][1] - flow_axis[0][1]])
+		flow_axis_length = np.linalg.norm(flow_axis_vector)
+		flow_axis_direction = flow_axis_vector/flow_axis_length
+
+		# Compute perpendicular vector
+		perpendicular_vector = np.array([-flow_axis_vector[1], flow_axis_vector[0]])
+		#perpendicular_vector = np.array([flow_axis_vector[1], -flow_axis_vector[0]])
+		# perpendicular_vector = np.array([-center_axis_vector[1], center_axis_vector[0]])
+		perpendicular_direction = perpendicular_vector/np.linalg.norm(perpendicular_vector)
+
+		# Take absolute value of project here so that it shouldn't matter which orientation of perpendicular vector we use
+		bounding_verts_scalar_proj = [abs(np.dot(np.array(vert), perpendicular_direction)) for vert in bounding_region.vertices]
+		x1 = min(bounding_verts_scalar_proj)
+		x2 = max(bounding_verts_scalar_proj)
+		projected_region_width = x2 - x1
+
+		slope = (v2 - v1) / projected_region_width
+
+		projected_dist = lambda x,y: abs(np.dot(np.array([x,y]), perpendicular_direction)) - x1
+
+		field_magnitude = lambda x,y: v1 + slope * projected_dist(x,y)
+
+		field_func = lambda x,y: tuple(field_magnitude(x,y)*flow_axis_direction)
+
+		return cls(field_func, bounding_region, **other_args)
 
 	def __getitem__(self, index):
 		if not self._bounding_region.polygon.contains(shapely.geometry.Point(*index)):
