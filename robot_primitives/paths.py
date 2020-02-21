@@ -27,9 +27,7 @@ class ConstrainedPath(Path):
 		self._constraints = constraints
 
 		# Compute euclidean path length
-		self._length = 0.
-		for u, v in zip(self._coord_list, self._coord_list[1:]):
-			self._length += np.linalg.norm(np.asarray(v) - np.asarray(u))
+		self._compute_length()
 
 		for param in self._constraints.keys():
 			setattr(ConstrainedPath, param, self._property_factory(param))
@@ -58,7 +56,7 @@ class ConstrainedPath(Path):
 
 		# Add coords of other path to this path and update length
 		self._coord_list.extend(other.coord_list)
-		self._length += other.length
+		self._compute_length()
 
 		return self
 
@@ -88,8 +86,14 @@ class ConstrainedPath(Path):
 							lambda obj, val: obj._constraints.update({parameter:value}), 
 							lambda obj:obj._constraints.pop(parameter))
 
+	def _compute_length(self):
+		self._length = 0.
+		for u, v in zip(self._coord_list, self._coord_list[1:]):
+			self._length += np.linalg.norm(np.asarray(v) - np.asarray(u))
+
 	def transform(self, transform_func):
 		self._coord_list = [transform_func(pt) for pt in self._coord_list]
+		self._compute_length()
 
 	def is_constrained(self, parameter):
 		return parameter in self._constraints
