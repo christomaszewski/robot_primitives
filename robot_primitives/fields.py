@@ -93,6 +93,7 @@ class BoundedVectorField(VectorField):
 		dist = lambda x,y: np.cross(np.array([x-center_axis[0][0], y - center_axis[0][1]]), center_axis_vector)/center_axis_length
 
 		b = 2*min_velocity/channel_width - 2*max_velocity/channel_width - slope*channel_width/2
+		print(f"b: {b}")
 		field_magnitude = lambda x,y: slope*dist(x,y)**2 + b*dist(x,y) + max_velocity
 		#field_magnitude = lambda x,y: (4 * (dist(x,y)) / channel_width - 4 * (dist(x,y))**2 / channel_width**2) * max_velocity
 		#field_magnitude = lambda x,y: (4 * (dist(x,y)+channel_width/2) / channel_width - 4 * (dist(x,y)+channel_width/2)**2 / channel_width**2) * max_velocity
@@ -156,7 +157,7 @@ class BoundedVectorField(VectorField):
 
 	def __getitem__(self, index):
 		if not self._bounding_region.polygon.contains(shapely.geometry.Point(*index)):
-			print('Error: Specified point lies out of valid boundary for this field')
+			#print('Error: Specified point lies out of valid boundary for this field')
 			return self._undefined_value
 		else:
 			return self._field_func(*index)
