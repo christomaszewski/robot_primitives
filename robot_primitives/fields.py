@@ -72,7 +72,7 @@ class BoundedVectorField(VectorField):
 		return cls(field_func, bounding_region, **other_args)
 
 	@classmethod
-	def extended_channel_flow_model(cls, bounding_region, center_axis, max_velocity, min_velocity=0., slope=1., channel_width=None, **other_args):
+	def extended_channel_flow_model(cls, bounding_region, center_axis, max_velocity, min_velocity=0., channel_width=None, **other_args):
 		print(f"center_axis: {center_axis}")
 		center_axis_vector = np.array([center_axis[1][0]-center_axis[0][0], center_axis[1][1] - center_axis[0][1]])
 		center_axis_length = np.linalg.norm(center_axis_vector)
@@ -94,9 +94,10 @@ class BoundedVectorField(VectorField):
 		dist = lambda x,y: np.linalg.norm(np.cross(np.array([x-center_axis[0][0], y - center_axis[0][1]]), center_axis_vector))/center_axis_length
 
 		w = channel_width / 2.
-		b = (min_velocity - max_velocity)/w - slope*w
-		print(f"b: {b}")
-		field_magnitude = lambda x,y: slope*dist(x,y)**2 + b*dist(x,y) + max_velocity
+		a = (min_velocity - max_velocity)/(w**2)
+		b = (min_velocity - max_velocity)/w - a*w
+		print(f"a: {a}, b: {b}")
+		field_magnitude = lambda x,y: a*dist(x,y)**2 + b*dist(x,y) + max_velocity
 		#field_magnitude = lambda x,y: (4 * (dist(x,y)) / channel_width - 4 * (dist(x,y))**2 / channel_width**2) * max_velocity
 		#field_magnitude = lambda x,y: (4 * (dist(x,y)+channel_width/2) / channel_width - 4 * (dist(x,y)+channel_width/2)**2 / channel_width**2) * max_velocity
 
