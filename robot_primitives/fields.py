@@ -79,12 +79,13 @@ class BoundedVectorField(VectorField):
 		center_axis_direction = center_axis_vector/center_axis_length
 		print(f"center_axis_vector: {center_axis_vector}")
 
+		perpendicular_vector = np.array([-center_axis_vector[1], center_axis_vector[0]])
+
+		perpendicular_direction = perpendicular_vector/np.linalg.norm(perpendicular_vector)
+		bounding_verts_scalar_proj = [np.dot(np.array(vert), perpendicular_direction) for vert in bounding_region.vertices]
+
 		if not channel_width:
 			# Compute channel width from bounding_region
-			perpendicular_vector = np.array([-center_axis_vector[1], center_axis_vector[0]])
-
-			perpendicular_direction = perpendicular_vector/np.linalg.norm(perpendicular_vector)
-			bounding_verts_scalar_proj = [np.dot(np.array(vert), perpendicular_direction) for vert in bounding_region.vertices]
 			channel_width = abs(max(bounding_verts_scalar_proj) - min(bounding_verts_scalar_proj))
 
 			print(f"channel_width: {channel_width}")
@@ -92,7 +93,8 @@ class BoundedVectorField(VectorField):
 		# Distance of a point (x,y) to the center axis line using cross product
 		dist = lambda x,y: np.linalg.norm(np.cross(np.array([x-center_axis[0][0], y - center_axis[0][1]]), center_axis_vector))/center_axis_length
 
-		b = 2*min_velocity/channel_width - 2*max_velocity/channel_width - slope*channel_width/2
+		w = channel_width / 2.
+		b = (min_velocity - max_velocity)/w - slope*w
 		print(f"b: {b}")
 		field_magnitude = lambda x,y: slope*dist(x,y)**2 + b*dist(x,y) + max_velocity
 		#field_magnitude = lambda x,y: (4 * (dist(x,y)) / channel_width - 4 * (dist(x,y))**2 / channel_width**2) * max_velocity
