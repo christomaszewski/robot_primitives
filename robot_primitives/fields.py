@@ -90,7 +90,7 @@ class BoundedVectorField(VectorField):
 			print(f"channel_width: {channel_width}")
 
 		# Distance of a point (x,y) to the center axis line using cross product
-		dist = lambda x,y: np.cross(np.array([x-center_axis[0][0], y - center_axis[0][1]]), center_axis_vector)/center_axis_length
+		dist = lambda x,y: np.linalg.norm(np.cross(np.array([x-center_axis[0][0], y - center_axis[0][1]]), center_axis_vector))/center_axis_length
 
 		b = 2*min_velocity/channel_width - 2*max_velocity/channel_width - slope*channel_width/2
 		print(f"b: {b}")
