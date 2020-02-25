@@ -71,6 +71,36 @@ class BoundedVectorField(VectorField):
 
 		return cls(field_func, bounding_region, **other_args)
 
+	@classmethod
+	def extended_channel_flow_model(cls, bounding_region, center_axis, max_velocity, min_velocity=0., slope=1., channel_width=None, **other_args):
+		print(f"center_axis: {center_axis}")
+		center_axis_vector = np.array([center_axis[1][0]-center_axis[0][0], center_axis[1][1] - center_axis[0][1]])
+		center_axis_length = np.linalg.norm(center_axis_vector)
+		center_axis_direction = center_axis_vector/center_axis_length
+		print(f"center_axis_vector: {center_axis_vector}")
+
+		if not channel_width:
+			# Compute channel width from bounding_region
+			perpendicular_vector = np.array([-center_axis_vector[1], center_axis_vector[0]])
+
+			perpendicular_direction = perpendicular_vector/np.linalg.norm(perpendicular_vector)
+			bounding_verts_scalar_proj = [np.dot(np.array(vert), perpendicular_direction) for vert in bounding_region.vertices]
+			channel_width = abs(max(bounding_verts_scalar_proj) - min(bounding_verts_scalar_proj))
+
+			print(f"channel_width: {channel_width}")
+
+		# Distance of a point (x,y) to the center axis line using cross product
+		dist = lambda x,y: np.cross(np.array([x-center_axis[0][0], y - center_axis[0][1]]), center_axis_vector)/center_axis_length
+
+		b = 2*min_velocity/channel_width - 2*max_velocity/channel_width - slope*channel_width/2
+		field_magnitude = lambda x,y: slope*dist(x,y)**2 + b*dist(x,y) + max_velocity
+		#field_magnitude = lambda x,y: (4 * (dist(x,y)) / channel_width - 4 * (dist(x,y))**2 / channel_width**2) * max_velocity
+		#field_magnitude = lambda x,y: (4 * (dist(x,y)+channel_width/2) / channel_width - 4 * (dist(x,y)+channel_width/2)**2 / channel_width**2) * max_velocity
+
+		field_func = lambda x,y: tuple(field_magnitude(x,y)*center_axis_direction)
+
+		return cls(field_func, bounding_region, **other_args)
+
 	"""
 	@classmethod
 	def half_channel_flow_model(cls, bounding_region, flow_axis, max_velocity, **other_args):
