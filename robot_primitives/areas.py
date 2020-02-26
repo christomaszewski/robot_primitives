@@ -2,9 +2,24 @@ import shapely.geometry
 import shapely.ops
 import numpy as np
 import collections
-import operator 
+import operator
+import os
+import json
 
 from .base import Area, AreaType
+
+class AreaJSONEncoder(json.JSONEncoder):
+
+	def default(self, obj):
+		if issubclass(obj, Area) and hasattr(obj, 'json_repr'):
+			return obj.json_repr()
+		else:
+			return json.JSONEncoder.default(self, obj)
+
+	@classmethod
+	def decode(cls, json_dict):
+		bounding_polygon = shapely.geometry.Polygon(json_dict['vertices'])
+		return cls(bounding_polygon, area_type=json_dict['type'], identifier=json_dict['id'])
 
 class Region(Area):
 	""" A basic type of Area that implements a variety of useful methods 
@@ -58,6 +73,8 @@ class Domain(Region):
 		 Its id is defined as 0 and its type is free by definition.
 	"""
 
+	json_encoder = AreaJSONEncoder
+
 	def __init__(self, bounding_polygon, ingress_point=None, egress_point=None):
 		self._id = 0
 		self._type = AreaType.FREE
@@ -88,6 +105,35 @@ class Domain(Region):
 		bounding_polygon = shapely.geometry.Polygon(vertices)
 
 		return cls(bounding_polygon, ingress_point, egress_point)
+
+	@classmethod
+	def from_json_dict(cls, json_dict):
+		bounding_polygon = shapely.geometry.Polygon(json_dict['vertices'])
+
+		return cls(bounding_polygon, ingress_point=json_dict['ingress'], egress_point=json_dict['egress'])
+
+	@classmethod
+	def from_file(cls, filename):
+		extension = os.path.splitext(filename)[1][1:]
+		with open(filename, mode='r') as f:
+			if extension == 'json':
+				domain = json.load(f, object_hook=Domain.from_json_dict)
+			else:
+				print(f"Error: Unrecognized extension {extension}, supported extension is json")
+				domain = None
+
+		return domain
+
+	def json_repr(self):
+		return dict(id=self._id, vertices=self._vertices, ingress=self._ingress_point, egress=self._egress_point)
+
+	def save(self, filename):
+		extension = os.path.splitext(filename)[1][1:]
+		with open(filename, 'w') as f:
+			if extension == 'json':
+				json.dump(self, f, skipkeys=True, cls=Domain.json_encoder, indent=2)
+			else:
+				print(f"Error: Unrecognized extension {extension}, supported extension is json")
 
 	def add_obstacle(self, obstacle):
 		self._obstacles[obstacle.id] = obstacle
