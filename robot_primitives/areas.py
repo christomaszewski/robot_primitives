@@ -67,6 +67,11 @@ class Region(Area):
 
 		return interior_angles
 
+	@property
+	def area(self):
+		return self._polygon.area
+	
+
 
 class Domain(Region):
 	""" Domain represents the entire area over which planning occurs. 
