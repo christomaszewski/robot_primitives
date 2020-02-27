@@ -68,10 +68,18 @@ class Region(Area):
 		return interior_angles
 
 	@property
+	def bounds(self):
+		return self._polygon.bounds
+
+	@property
 	def area(self):
 		return self._polygon.area
-	
 
+	@property
+	def diameter(self):
+		# returns maximum diameter of polygon?
+		min_x, min_y, max_x, max_y = self.bounds
+		return np.linalg.norm((max_x-min_x, max_y-min_y))
 
 class Domain(Region):
 	""" Domain represents the entire area over which planning occurs. 
@@ -150,37 +158,43 @@ class Domain(Region):
 			self._vertices.extend(o.vertices)
 
 	def compute_intersection(self, obj):
-		# If obj does not intersect domain boundary,
-		# it wont intersect anything in the domain
 		if not self._polygon.intersects(obj):
 			return []
 
-		intersection = self._polygon.intersection(obj)
-		intersection_points = [IntersectionPoint(c, self._id) for c in intersection.coords]
+		intersection  = self._polygon.intersection(obj)
+
+		return [np.array(c) for c in intersection.coords]
+		# # If obj does not intersect domain boundary,
+		# # it wont intersect anything in the domain
+		# if not self._polygon.intersects(obj):
+		# 	return []
+
+		# intersection = self._polygon.intersection(obj)
+		# intersection_points = [IntersectionPoint(c, self._id) for c in intersection.coords]
 
 
-		for o in self._obstacles.values():
-			if o.polygon.intersects(obj):
-				intersection = o.polygon.intersection(obj)
+		# for o in self._obstacles.values():
+		# 	if o.polygon.intersects(obj):
+		# 		intersection = o.polygon.intersection(obj)
 
-				# TODO: Do this some other way - handle multilinestring, linestring, and point
-				if isinstance(intersection, collections.Iterable):
-					intersection = shapely.ops.linemerge(intersection)	
+		# 		# TODO: Do this some other way - handle multilinestring, linestring, and point
+		# 		if isinstance(intersection, collections.Iterable):
+		# 			intersection = shapely.ops.linemerge(intersection)	
 				
-				if not isinstance(intersection, collections.Iterable):
-					intersection = (intersection,)
+		# 		if not isinstance(intersection, collections.Iterable):
+		# 			intersection = (intersection,)
 				
-				intersection_list = list(intersection)
+		# 		intersection_list = list(intersection)
 
-				new_points = [IntersectionPoint(c, o.id) for intersect in intersection_list for c in intersect.coords]
+		# 		new_points = [IntersectionPoint(c, o.id) for intersect in intersection_list for c in intersect.coords]
 
-				# If intersects at a single point, add this point to the list twice
-				if len(new_points) == 1:
-					new_points *= 2
+		# 		# If intersects at a single point, add this point to the list twice
+		# 		if len(new_points) == 1:
+		# 			new_points *= 2
 
-				intersection_points.extend(new_points)
+		# 		intersection_points.extend(new_points)
 
-		return intersection_points
+		# return intersection_points
 
 	def get_configuration_space(self, vehicle_radius):
 		offset_boundary = self._polygon.buffer(-vehicle_radius, join_style=2)
@@ -191,10 +205,6 @@ class Domain(Region):
 	@property
 	def polygon(self):
 		return shapely.geometry.Polygon(self._polygon.exterior.coords, holes=[o.polygon.exterior.coords for o in self._obstacles.values()])
-	
-	@property
-	def bounds(self):
-		return self._polygon.bounds
 	
 	@property
 	def obstacles(self):

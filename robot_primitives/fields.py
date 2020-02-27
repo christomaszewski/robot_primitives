@@ -164,3 +164,38 @@ class BoundedVectorField(VectorField):
 			return self._undefined_value
 		else:
 			return self._field_func(*index)
+
+
+class RadialChannelField(BoundedVectorField):
+
+	def __init__(self, bounding_region, origin, undefined_value=(0.,0.)):
+		self._bounding_region = bounding_region
+		self._origin = np.array(origin)
+		self._undefined_value = undefined_value
+
+		# Precompute sweep line distance that will cross entire domain regardless of origin
+		self._region_diameter = self._bounding_region.diameter + 1.0
+
+		self._min_vel = 0.0
+		self._max_vel = 0.5
+
+	def _field_magnitude(self, width, dist):
+		a = (self._min_vel - self._max_vel)/(width**2)
+		b = (self._min_vel - self._max_vel)/width - a*width
+		return a*dist**2 + b*dist + self._max_vel
+
+	def _field_func(self, x, y):
+		pt = np.array((x,y))
+		pt_vec = pt - self._origin
+		sweep_vec = pt_vec/np.linalg.norm(pt_vec) * self._region_diameter + self._origin
+		cross_section = self._bounding_region.compute_intersection(shapely.geometry.LineString([self._origin, sweep_vec]))
+
+		cross_vec = cross_section[1] - cross_section[0]
+		cross_len = np.linalg.norm(cross_vec)
+		midpoint = 0.5 * cross_vec + cross_section[0]
+
+		dist = np.linalg.norm(pt - midpoint)
+		flow_magnitude = self._field_magnitude(cross_len/2., dist)
+		flow_direction = np.array([pt_vec[1], -pt_vec[0]])/np.linalg.norm(pt_vec)
+
+		return tuple(flow_magnitude*flow_direction)
