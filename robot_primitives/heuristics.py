@@ -1,5 +1,9 @@
 import numpy as np
 
+import autograd.numpy as anp
+from autograd import jacobian
+from scipy.integrate import quad
+
 from .base import Heuristic
 
 class EuclideanDistance(Heuristic):
@@ -33,11 +37,15 @@ class DirectedDistance(Heuristic):
 
 class OpposingFlowEnergy(Heuristic):
 
-	def __init__(self, flow_field, delta=0.01):
+	def __init__(self, flow_field, nominal_speed=0.5, delta=0.01):
 		self._flow_field = flow_field
+		self._nominal_speed = nominal_speed
 		self._delta = delta
 
-	def compute_cost(self, start_point, end_point, nominal_speed=0.5):
+	def compute_cost(self, start_point, end_point, nominal_speed=None):
+		if nominal_speed is None:
+			nominal_speed = self._nominal_speed
+
 		start = np.array(start_point)
 		end = np.array(end_point)
 
@@ -91,3 +99,30 @@ class OpposingFlowEnergy(Heuristic):
 
 		return total_cost
 		"""
+
+class FlowIntegral(Heuristic):
+
+	def __init__(self, flow_field, nominal_speed=0.5, delta=0.01):
+		self._flow_field = flow_field
+		self._nominal_speed = nominal_speed
+		self._delta = delta
+
+	def compute_cost(self, start_point, end_point, nominal_speed=None):
+		if nominal_speed is None:
+			nominal_speed = self._nominal_speed
+			
+		start = anp.array(start_point)
+		end = anp.array(end_point)
+		path_vec = end - start
+		boat_vec = nominal_speed * path_vec / np.linalg.norm(path_vec)
+
+		F = lambda x: anp.array(self._flow_field[x])
+		r = lambda t: (start + boat_vec * t)
+		drdt = jacobian(r)
+
+		def integrand(t):
+			return F(r(t)) @ drdt(t)
+
+		I, e = quad(integrand, 0., np.linalg.norm(path_vec)/nominal_speed)
+
+		return I

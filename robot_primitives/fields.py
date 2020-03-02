@@ -168,7 +168,7 @@ class BoundedVectorField(VectorField):
 
 class RadialChannelField(BoundedVectorField):
 
-	def __init__(self, bounding_region, origin, undefined_value=(0.,0.)):
+	def __init__(self, bounding_region, origin, min_vel=0., max_vel=0.5, undefined_value=(0.,0.)):
 		self._bounding_region = bounding_region
 		self._origin = np.array(origin)
 		self._undefined_value = undefined_value
@@ -176,8 +176,8 @@ class RadialChannelField(BoundedVectorField):
 		# Precompute sweep line distance that will cross entire domain regardless of origin
 		self._region_diameter = self._bounding_region.diameter + 1.0
 
-		self._min_vel = 0.0
-		self._max_vel = 0.5
+		self._min_vel = min_vel
+		self._max_vel = max_vel
 
 	def _field_magnitude(self, width, dist):
 		a = (self._min_vel - self._max_vel)/(width**2)

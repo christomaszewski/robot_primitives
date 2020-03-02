@@ -113,6 +113,12 @@ class ConstrainedPath(Path):
 		for k in undefined_keys:
 			self._constraints[k].append(None)
 
+	def reverse(self):
+		self._coord_list.reverse()
+
+		for key in self._constraints.keys():
+			self._constraints[key].reverse()
+
 	@property
 	def size(self):
 		return len(self._coord_list)
