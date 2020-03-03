@@ -227,7 +227,7 @@ class AsymmetricRadialChannelField(BoundedVectorField):
 		angle = np.arctan2(pt_vec[1], pt_vec[0])
 		center_ratio = np.linalg.norm((self._center_ratios[0]*np.cos(angle), self._center_ratios[1]*np.sin(angle)))
 
-		sweep_vec = pt_vec/np.linalg.norm(pt_vec) * self._region_diameter + self._origin
+		sweep_vec = pt_vec/pt_len * self._region_diameter + self._origin
 		cross_section = self._bounding_region.compute_intersection(shapely.geometry.LineString([self._origin, sweep_vec]))
 
 		cross_vec = cross_section[1] - cross_section[0]
@@ -240,7 +240,7 @@ class AsymmetricRadialChannelField(BoundedVectorField):
 		if pt_len > center_point_len:
 			# pt on outer bank side of flow center
 			dist = pt_len - center_point_len
-			width = np.linalg.norm(cross_section[1]-center_point)
+			width = (1. - center_ratio) * cross_len
 			flow_magnitude = self._field_magnitude(width, dist)
 		else:
 			# pt on inner bank side of flow center
@@ -248,6 +248,6 @@ class AsymmetricRadialChannelField(BoundedVectorField):
 			width = center_ratio * cross_len
 			flow_magnitude = self._field_magnitude(width, dist)
 
-		flow_direction = np.array([pt_vec[1], -pt_vec[0]])/np.linalg.norm(pt_vec)
+		flow_direction = np.array([pt_vec[1], -pt_vec[0]])/pt_len
 
 		return tuple(flow_magnitude*flow_direction)
