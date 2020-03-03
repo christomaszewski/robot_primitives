@@ -199,3 +199,55 @@ class RadialChannelField(BoundedVectorField):
 		flow_direction = np.array([pt_vec[1], -pt_vec[0]])/np.linalg.norm(pt_vec)
 
 		return tuple(flow_magnitude*flow_direction)
+
+class AsymmetricRadialChannelField(BoundedVectorField):
+
+	def __init__(self, bounding_region, origin, min_vel=0., max_vel=0.5, center_ratios=(0.5, 0.75), undefined_value=(0.,0.)):
+		self._bounding_region = bounding_region
+		self._origin = np.array(origin)
+		self._undefined_value = undefined_value
+		self._center_ratios = center_ratios
+
+		# Precompute sweep line distance that will cross entire domain regardless of origin
+		self._region_diameter = self._bounding_region.diameter + 1.0
+
+		self._min_vel = min_vel
+		self._max_vel = max_vel
+
+	def _field_magnitude(self, width, dist):
+		a = (self._min_vel - self._max_vel)/(width**2)
+		b = (self._min_vel - self._max_vel)/width - a*width
+		return a*dist**2 + b*dist + self._max_vel
+
+	def _field_func(self, x, y):
+		pt = np.array((x,y))
+		pt_vec = pt - self._origin
+		pt_len = np.linalg.norm(pt_vec)
+
+		angle = np.arctan2(pt_vec[1], pt_vec[0])
+		center_ratio = np.linalg.norm((self._center_ratios[0]*np.cos(angle), self._center_ratios[1]*np.sin(angle)))
+
+		sweep_vec = pt_vec/np.linalg.norm(pt_vec) * self._region_diameter + self._origin
+		cross_section = self._bounding_region.compute_intersection(shapely.geometry.LineString([self._origin, sweep_vec]))
+
+		cross_vec = cross_section[1] - cross_section[0]
+		cross_len = np.linalg.norm(cross_vec)
+		center_point = center_ratio * cross_vec + cross_section[0]
+		center_point_vec = center_point - self._origin
+		center_point_len = np.linalg.norm(center_point_vec)
+
+		flow_magnitude = 0.
+		if pt_len > center_point_len:
+			# pt on outer bank side of flow center
+			dist = pt_len - center_point_len
+			width = np.linalg.norm(cross_section[1]-center_point)
+			flow_magnitude = self._field_magnitude(width, dist)
+		else:
+			# pt on inner bank side of flow center
+			dist = center_point_len - pt_len
+			width = center_ratio * cross_len
+			flow_magnitude = self._field_magnitude(width, dist)
+
+		flow_direction = np.array([pt_vec[1], -pt_vec[0]])/np.linalg.norm(pt_vec)
+
+		return tuple(flow_magnitude*flow_direction)
