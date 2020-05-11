@@ -38,6 +38,9 @@ class Region(Area):
 		
 		return self._polygon.exterior.coords[side_index:side_index+2] 
 
+	def contains_point(self, point):
+		return self._polygon.contains(shapely.geometry.Point(*point))
+
 	@property
 	def vertices(self):
 		return self._vertices

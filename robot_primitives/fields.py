@@ -165,6 +165,14 @@ class BoundedVectorField(VectorField):
 		else:
 			return self._field_func(*index)
 
+	@property
+	def undefined_value(self):
+		return self._undefined_value
+
+	@undefined_value.setter
+	def undefined_value(self, new_val):
+		self._undefined_value = new_val
+
 
 class RadialChannelField(BoundedVectorField):
 
