@@ -159,7 +159,9 @@ class BoundedVectorField(VectorField):
 		return cls(field_func, bounding_region, **other_args)
 
 	def __getitem__(self, index):
-		if not self._bounding_region.polygon.contains(shapely.geometry.Point(*index)):
+		#Todo: remove this once it is verified new contains point method works
+		#if not self._bounding_region.polygon.contains(shapely.geometry.Point(*index)):	
+		if not self._bounding_region.contains_point(index):
 			#print('Error: Specified point lies out of valid boundary for this field')
 			return self._undefined_value
 		else:
