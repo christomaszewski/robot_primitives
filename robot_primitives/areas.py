@@ -205,6 +205,18 @@ class Domain(Region):
 
 		return (offset_boundary, offset_obstacles)
 
+	def line_of_sight(self, p1, p2):
+		line = shapely.geometry.LineString([p1, p2])
+
+		if not self._polygon.contains(line):
+			return False
+
+		for o in self._obstacles.values():
+			if line.intersects(o.polygon):
+				return False
+
+		return True
+
 	@property
 	def polygon(self):
 		return shapely.geometry.Polygon(self._polygon.exterior.coords, holes=[o.polygon.exterior.coords for o in self._obstacles.values()])
