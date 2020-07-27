@@ -132,9 +132,9 @@ class BoundedVectorField(VectorField):
 		"""
 
 
-		flow_axis_vector = np.array([flow_axis[1][0]-flow_axis[0][0], flow_axis[1][1] - flow_axis[0][1]])
+		flow_axis_vector = np.array([flow_axis[1][0] - flow_axis[0][0], flow_axis[1][1] - flow_axis[0][1]])
 		flow_axis_length = np.linalg.norm(flow_axis_vector)
-		flow_axis_direction = flow_axis_vector/flow_axis_length
+		flow_axis_direction = flow_axis_vector / flow_axis_length
 
 		# Compute perpendicular vector
 		perpendicular_vector = np.array([-flow_axis_vector[1], flow_axis_vector[0]])
@@ -155,6 +155,22 @@ class BoundedVectorField(VectorField):
 		field_magnitude = lambda x,y: v1 + slope * projected_dist(x,y)
 
 		field_func = lambda x,y: tuple(field_magnitude(x,y)*flow_axis_direction)
+
+		return cls(field_func, bounding_region, **other_args)
+
+	@classmethod
+	def unidirectional_poly_flow_model(cls, bounding_region, flow_dir, measurement_pts, flow_speeds, poly_deg, **other_args):
+		#flow_axis_vector = np.array([flow_axis[1][0] - flow_axis[0][0], flow_axis[1][1] - flow_axis[0][1]])
+		#flow_axis_length = np.linalg.norm(flow_axis_vector)
+		flow_dir /= np.linalg.norm(flow_dir)
+		perp_flow_dir = np.array([-flow_dir[1], flow_dir[0]])
+
+		proj_pts = [np.dot(pt, perp_flow_dir) for pt in measurement_pts]
+		field_magnitude = np.polynomial.Polynomial.fit(proj_pts, flow_speeds, poly_deg)
+
+		projected_dist = lambda x,y: np.dot(np.array([x,y], perp_flow_dir))
+
+		field_func = lambda x,y: tuple(field_magnitude(projected_dist(x,y))*flow_dir)
 
 		return cls(field_func, bounding_region, **other_args)
 
