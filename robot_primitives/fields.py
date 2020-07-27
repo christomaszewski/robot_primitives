@@ -168,7 +168,7 @@ class BoundedVectorField(VectorField):
 		proj_pts = [np.dot(pt, perp_flow_dir) for pt in measurement_pts]
 		field_magnitude = np.polynomial.Polynomial.fit(proj_pts, flow_speeds, poly_deg)
 
-		projected_dist = lambda x,y: np.dot(np.array([x,y], perp_flow_dir))
+		projected_dist = lambda x,y: np.dot(np.array([x,y]), perp_flow_dir)
 
 		field_func = lambda x,y: tuple(field_magnitude(projected_dist(x,y))*flow_dir)
 
