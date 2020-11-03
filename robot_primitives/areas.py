@@ -217,6 +217,17 @@ class Domain(Region):
 
 		return True
 
+	def offset_domain(self, offset):
+		offset_boundary = self._polygon.buffer(-offset, join_style=2)
+		offset_obstacles = [o.polygon.buffer(offset, join_style=1) for o in self._obstacles.values()]
+
+		d = Domain(offset_boundary, self._ingress_point, self._egress_point)
+
+		for o in offset_obstacles:
+			d.add_obstacle(Obstacle(o))
+
+		return d
+
 	@property
 	def polygon(self):
 		return shapely.geometry.Polygon(self._polygon.exterior.coords, holes=[o.polygon.exterior.coords for o in self._obstacles.values()])
